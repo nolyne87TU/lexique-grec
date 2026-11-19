@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}Lexique grec{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header>
+    <a class="logo" href="{{ url_for('accueil') }}">Λεξικόν</a>
+    <span class="sous-titre">Mon lexique de grec ancien</span>
+    <nav class="nav-principale">
+      <a href="{{ url_for('accueil') }}">Plan de travail</a>
+      <a href="{{ url_for('langue_accueil') }}">Langue</a>
+      <a href="{{ url_for('revision') }}" class="nav-reviser">Réviser</a>
+    </nav>
+  </header>
+
+  <main class="{% block classe_main %}{% endblock %}">
+    {% block contenu %}{% endblock %}
+  </main>
+
+  <footer>
+    Fiches générées par une IA : à vérifier dans le Bailly ou le Chantraine.
+  </footer>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block titre %}{{ fiche.mot }} – Lexique grec{% endblock %}
+
+{% block contenu %}
+{% for categorie, message in get_flashed_messages(with_categories=true) %}
+  <p class="{{ 'erreur' if categorie == 'erreur' else 'info' }}">{{ message }}</p>
+{% endfor %}
+
+<article class="fiche">
+  <h1>{{ fiche.mot }} <span class="translit">({{ fiche.translitteration }})</span></h1>
+
+  <p class="statuts">
+    {% if fiche.verifie %}
+      <span class="badge badge-ok">✓ Vérifiée le {{ fiche.date_verif | date_fr }}</span>
+    {% else %}
+      <span class="badge badge-attente">À vérifier</span>
+    {% endif %}
+    {% if fiche.corrige %}<span class="badge badge-corrige">Corrigée par moi</span>{% endif %}
+  </p>
+
+  <dl>
+    <dt>Nature</dt>
+    <dd>{{ fiche.nature }}</dd>
+
+    {% if fiche.genre %}
+      <dt>Genre</dt>
+      <dd>{{ fiche.genre }}</dd>
+    {% endif %}
+
+    {% if fiche.genitif %}
+      <dt>Génitif</dt>
+      <dd>{{ fiche.genitif }}</dd>
+    {% endif %}
+
+    <dt>Forme de base</dt>
+    <dd>{{ fiche.forme_de_base }}</dd>
+
+    <dt>Traductions</dt>
+    <dd>{{ fiche.traductions | join(", ") }}</dd>
+
+    <dt>Étymologie</dt>
+    <dd>{{ fiche.etymologie or "non précisée" }}</dd>
+
+    <dt>Champ lexical</dt>
+    <dd><span class="badge">{{ fiche.champ_lexical }}</span></dd>
+
+    <dt>Dérivés français</dt>
+    <dd>{{ fiche.derives_francais | join(", ") if fiche.derives_francais else "aucun" }}</dd>
+
+    <dt>Fiabilité annoncée par l'IA</dt>
+    <dd>{{ fiche.fiabilite }}</dd>
+  </dl>
+
+  {% if fiche.note_verif %}
+    <div class="note-verif"><strong>Ma vérification :</strong><br>{{ fiche.note_verif }}</div>
+  {% endif %}
+
+  {% if diffs %}
+    <div class="corrections">
+      <strong>Ce que l'IA avait écrit et que j'ai corrigé :</strong>
+      <ul>
+        {% for d in diffs %}
+          <li><em>{{ d.champ }}</em> : <span class="avant">{{ d.avant }}</span> → <span class="apres">{{ d.apres }}</span></li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if not fiche.verifie %}
+    <p class="avertissement">Fiche écrite par une IA : compare-la avec le Bailly ou le Chantraine.</p>
+  {% endif %}
+
+  <div class="actions-fiche">
+    <a class="btn-principal lien" href="{{ url_for('verifier_fiche', mot=fiche.mot) }}">
+      {{ 'Modifier ma vérification' if fiche.verifie else 'Vérifier et corriger' }}
+    </a>
+    {% if not fiche.verifie %}
+      <form method="post" action="{{ url_for('statut_fiche', mot=fiche.mot) }}">
+        <input type="hidden" name="action" value="verifier">
+        <button class="btn-secondaire" type="submit" title="Tout est juste, rien à corriger">Marquer comme vérifiée (sans changement)</button>
+      </form>
+    {% else %}
+      <form method="post" action="{{ url_for('statut_fiche', mot=fiche.mot) }}">
+        <input type="hidden" name="action" value="retirer">
+        <button class="lien-bouton" type="submit">Retirer le statut « vérifiée »</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <a class="retour" href="{{ url_for('accueil') }}">← Retour au plan de travail</a>
+</article>
+{% endblock %}

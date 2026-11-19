@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block classe_main %}large{% endblock %}
+
+{% block contenu %}
+<section class="recherche">
+  <h1>Cherche un mot grec</h1>
+  <p>Écris un mot : sa fiche est créée et posée sur ton plan de travail.</p>
+
+  <form action="{{ url_for('recherche') }}" method="post">
+    <input type="text" name="mot" value="{{ mot }}" placeholder="λόγος" autocomplete="off" autofocus>
+    <button type="submit">Chercher</button>
+  </form>
+
+  {% if erreur %}
+    <p class="erreur">{{ erreur }}</p>
+  {% endif %}
+</section>
+
+<section class="plan-travail">
+  <div class="barre-tri">
+    <h2>Mon plan de travail <span class="compteur">({{ mots | length }} mot{{ "s" if mots | length > 1 }})</span></h2>
+    {% if mots %}
+    <div class="boutons-tri" role="group" aria-label="Ranger les mots">
+      <span>Ranger par :</span>
+      <button type="button" data-tri="alpha" class="actif">Ordre alphabétique</button>
+      <button type="button" data-tri="nature">Classe grammaticale</button>
+      <button type="button" data-tri="champ">Champ lexical</button>
+      <button type="button" data-tri="verif">Vérification</button>
+    </div>
+    {% endif %}
+  </div>
+
+  {% if mots %}
+  <p class="stats-verif">
+    <strong>{{ nb_verifiees }} / {{ mots | length }}</strong> fiche{{ "s" if mots | length > 1 }} vérifiée{{ "s" if nb_verifiees != 1 }} dans le Bailly
+    · <a href="{{ url_for('bilan') }}">Voir mon bilan de vérification</a>
+  </p>
+  {% endif %}
+
+  <div id="plan" class="plan">
+    {% for m in mots %}
+      <a class="carte{{ ' nouveau' if m.mot == nouveau }}" href="{{ url_for('fiche', mot=m.mot) }}"
+         data-nature="{{ (m.nature or 'autre') | lower }}"
+         data-champ="{{ (m.champ_lexical or 'autre') | lower }}"
+         data-verif="{{ 'vérifiée' if m.verifie else 'à vérifier' }}">
+        <span class="carte-mot">{{ m.mot }}</span>
+        <span class="carte-translit">{{ m.translitteration }}</span>
+        <span class="carte-sens">{{ m.traductions | join(", ") }}</span>
+        <span class="carte-badges">
+          <span class="badge">{{ m.nature }}</span>
+          <span class="badge badge-champ">{{ m.champ_lexical }}</span>
+          {% if m.verifie %}<span class="badge badge-ok" title="Vérifiée dans le Bailly">✓ vérifiée</span>{% endif %}
+        </span>
+      </a>
+    {% else %}
+      <p class="vide">Ton plan de travail est vide : cherche ton premier mot ci-dessus.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='plan.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,13 @@
+# Secrets : ne jamais publier ta clé d'API
+.env
+
+# Environnement Python
+venv/
+__pycache__/
+*.pyc
+
+# Ma base de données personnelle (mots, notes, exercices)
+lexique.db
+
+# Fichiers du Mac
+.DS_Store

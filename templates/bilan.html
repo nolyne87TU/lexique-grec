@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block titre %}Bilan de vérification – Lexique grec{% endblock %}
+
+{% block classe_main %}moyen{% endblock %}
+
+{% block contenu %}
+<p><a class="retour" href="{{ url_for('accueil') }}">← Retour au plan de travail</a></p>
+<h1 class="titre-revision">Bilan de vérification</h1>
+<p class="centre intro">Ce que j'ai vérifié dans le Bailly et le Chantraine, et ce que l'IA avait faux.</p>
+
+<div class="chiffres">
+  <div class="chiffre"><span class="grand-chiffre">{{ b.total }}</span> fiches</div>
+  <div class="chiffre"><span class="grand-chiffre">{{ b.verifiees }}</span> vérifiées</div>
+  <div class="chiffre"><span class="grand-chiffre">{{ b.corrigees_verifiees }}</span> corrigées</div>
+</div>
+
+{% if b.verifiees %}
+  <p class="centre">
+    Parmi les {{ b.verifiees }} fiche{{ 's' if b.verifiees > 1 }} vérifiée{{ 's' if b.verifiees > 1 }},
+    {{ b.corrigees_verifiees }} contenai{{ 'en' if b.corrigees_verifiees > 1 else '' }}t au moins une erreur
+    ({{ (100 * b.corrigees_verifiees / b.verifiees) | round | int }} %).
+  </p>
+{% else %}
+  <p class="vide">Aucune fiche vérifiée pour l'instant : ouvre une fiche et clique sur « Vérifier et corriger ».</p>
+{% endif %}
+
+{% if b.corrections %}
+  <h2>Mes corrections</h2>
+  {% for c in b.corrections %}
+    <article class="point">
+      <div class="point-tete">
+        <a class="titre-lien grec" href="{{ url_for('fiche', mot=c.mot) }}"><strong>{{ c.mot }}</strong></a>
+      </div>
+      <ul class="corrections-liste">
+        {% for d in c.diffs %}
+          <li><em>{{ d.champ }}</em> : <span class="avant">{{ d.avant }}</span> → <span class="apres">{{ d.apres }}</span></li>
+        {% endfor %}
+      </ul>
+    </article>
+  {% endfor %}
+{% endif %}
+{% endblock %}

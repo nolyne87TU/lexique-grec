@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block titre %}Langue – Lexique grec{% endblock %}
+
+{% block classe_main %}moyen{% endblock %}
+
+{% block contenu %}
+<h1 class="titre-revision">Langue</h1>
+<p class="centre intro">Note ici les points de langue vus en cours : le site prépare des phrases à compléter pour chacun.</p>
+
+{% for categorie, message in get_flashed_messages(with_categories=true) %}
+  <p class="{{ 'erreur' if categorie == 'erreur' else 'info' }}">{{ message }}</p>
+{% endfor %}
+
+<section class="bloc-formulaire">
+  <h2>Ajouter un point de langue</h2>
+  <form action="{{ url_for('ajouter_point') }}" method="post" class="form-point">
+    <div class="rev-reglages">
+      <label class="rev-champ" style="flex: 2;">
+        <span>Point de cours</span>
+        <input type="text" name="titre" list="suggestions" required maxlength="120" placeholder="L'aoriste sigmatique" autocomplete="off">
+      </label>
+      <label class="rev-champ">
+        <span>Type</span>
+        <select name="categorie">
+          {% for c in categories %}<option value="{{ c }}">{{ c | capitalize }}</option>{% endfor %}
+        </select>
+      </label>
+    </div>
+    <datalist id="suggestions">
+      {% for s in suggestions %}<option value="{{ s }}">{% endfor %}
+    </datalist>
+    <label class="rev-champ">
+      <span>Mes notes de cours (facultatif : l'IA s'en servira)</span>
+      <textarea name="notes" rows="3" maxlength="2000" placeholder="Ex. : terminaisons de l'aoriste, augment, exceptions vues en classe…"></textarea>
+    </label>
+    <button class="btn-principal" type="submit">Ajouter ce point</button>
+  </form>
+</section>
+
+{% if nb_points %}
+<div class="barre-tri">
+  <h2>Mes points <span class="compteur">({{ nb_points }})</span></h2>
+  {% if total_exos %}
+    <a class="btn-principal lien" href="{{ url_for('exercices') }}">S'entraîner sur tout ({{ total_exos }})</a>
+  {% endif %}
+</div>
+
+{% for categorie, liste in groupes %}
+  <h3 class="titre-categorie">{{ categorie | capitalize }}</h3>
+  {% for p in liste %}
+    <article class="point">
+      <div class="point-tete">
+        <a class="titre-lien" href="{{ url_for('point_detail', id=p.id) }}"><strong>{{ p.titre }}</strong></a>
+        <span class="badge">{{ p.nb }} exercice{{ 's' if p.nb > 1 }}</span>
+      </div>
+      {% if p.notes %}<p class="point-notes">{{ p.notes }}</p>{% endif %}
+      <div class="point-actions">
+        <a class="btn-secondaire lien" href="{{ url_for('point_detail', id=p.id) }}">Voir le cours</a>
+        <form method="post" action="{{ url_for('generer_exercices_point', id=p.id) }}" class="form-generer">
+          <button class="btn-secondaire" type="submit">{{ 'Générer ' ~ nb_defaut ~ ' exercices de plus' if p.nb else 'Générer ' ~ nb_defaut ~ ' exercices' }}</button>
+        </form>
+        {% if p.nb %}
+          <a class="btn-principal lien" href="{{ url_for('exercices', point=p.id) }}">S'entraîner</a>
+        {% endif %}
+        <form method="post" action="{{ url_for('supprimer_point', id=p.id) }}" onsubmit="return confirm('Supprimer ce point et tous ses exercices ?')">
+          <button class="lien-bouton" type="submit">Supprimer</button>
+        </form>
+      </div>
+    </article>
+  {% endfor %}
+{% endfor %}
+{% else %}
+  <p class="vide">Aucun point pour l'instant : ajoute ton premier point de cours ci-dessus.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Affiche « Génération en cours » pendant que l'IA travaille (quelques secondes)
+  document.querySelectorAll(".form-generer").forEach(function (form) {
+    form.addEventListener("submit", function () {
+      var bouton = form.querySelector("button");
+      bouton.textContent = "Génération en cours…";
+      setTimeout(function () { bouton.disabled = true; }, 0);
+    });
+  });
+</script>
+{% endblock %}

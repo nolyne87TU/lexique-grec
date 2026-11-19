@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block titre %}Révision – Lexique grec{% endblock %}
+
+{% block classe_main %}moyen{% endblock %}
+
+{% block contenu %}
+<h1 class="titre-revision">Révision</h1>
+
+<div id="revision" data-accueil="{{ url_for('accueil') }}"></div>
+
+<script id="donnees" type="application/json">{{ mots | tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='revision.js') }}"></script>
+{% endblock %}

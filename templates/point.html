@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block titre %}{{ point.titre }} – Langue{% endblock %}
+
+{% block classe_main %}moyen{% endblock %}
+
+{% block contenu %}
+<p><a class="retour" href="{{ url_for('langue_accueil') }}">← Mes points de langue</a></p>
+<h1 class="titre-point">{{ point.titre }} <span class="badge">{{ point.categorie | capitalize }}</span></h1>
+
+{% for categorie, message in get_flashed_messages(with_categories=true) %}
+  <p class="{{ 'erreur' if categorie == 'erreur' else 'info' }}">{{ message }}</p>
+{% endfor %}
+
+<section class="bloc-formulaire">
+  <h2>Mes notes de cours</h2>
+  <form method="post" action="{{ url_for('enregistrer_notes', id=point.id) }}" class="form-point">
+    <textarea name="notes" rows="6" maxlength="2000" placeholder="Recopie ici ce que tu as vu en cours : règles, terminaisons, exceptions…">{{ point.notes or '' }}</textarea>
+    <button class="btn-secondaire" type="submit">Enregistrer mes notes</button>
+  </form>
+</section>
+
+<section class="bloc-formulaire">
+  <h2>Rappel de cours <span class="compteur">(écrit par l'IA : à comparer avec ton cours)</span></h2>
+
+  {% if point.cours %}
+    {% if point.cours.resume %}<p class="cours-resume">{{ point.cours.resume }}</p>{% endif %}
+
+    {% if point.cours.formes %}
+      <table class="formes">
+        {% for f in point.cours.formes %}
+          <tr><th>{{ f.libelle }}</th><td class="grec">{{ f.forme }}</td></tr>
+        {% endfor %}
+      </table>
+    {% endif %}
+
+    {% if point.cours.exemples %}
+      <h3>Exemples</h3>
+      {% for ex in point.cours.exemples %}
+        <p class="exemple"><span class="grec">{{ ex.grec }}</span><br><span class="details-doux">« {{ ex.francais }} »</span></p>
+      {% endfor %}
+    {% endif %}
+
+    {% if point.cours.pieges %}
+      <h3>Pièges à éviter</h3>
+      <ul class="pieges">{% for x in point.cours.pieges %}<li>{{ x }}</li>{% endfor %}</ul>
+    {% endif %}
+  {% else %}
+    <p class="vide">Pas encore de rappel de cours pour ce point.</p>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('generer_cours_point', id=point.id) }}" class="form-generer">
+    <button class="btn-secondaire" type="submit">{{ 'Régénérer le rappel de cours' if point.cours else 'Générer un rappel de cours' }}</button>
+  </form>
+</section>
+
+<section class="bloc-formulaire">
+  <h2>Exercices <span class="compteur">({{ exercices | length }})</span></h2>
+
+  <div class="point-actions">
+    <form method="post" action="{{ url_for('generer_exercices_point', id=point.id) }}" class="form-generer">
+      <input type="hidden" name="retour" value="point">
+      <button class="btn-secondaire" type="submit">{{ 'Générer ' ~ nb_defaut ~ ' exercices de plus' if exercices else 'Générer ' ~ nb_defaut ~ ' exercices' }}</button>
+    </form>
+    {% if exercices %}
+      <a class="btn-principal lien" href="{{ url_for('exercices', point=point.id) }}">S'entraîner</a>
+    {% endif %}
+  </div>
+
+  <ul class="liste-exos" data-supprimer="{{ url_for('supprimer_exercice', id=0) }}">
+    {% for e in exercices %}
+      {% set parts = e.phrase.split('____') %}
+      <li data-id="{{ e.id }}">
+        <div>
+          <span class="grec">{{ parts[0] }}<strong class="trou rempli">{{ e.reponse }}</strong>{{ parts[1] }}</span><br>
+          <span class="details-doux">{% if e.traduction %}« {{ e.traduction }} »{% endif %}</span>
+        </div>
+        <button type="button" class="lien-bouton btn-retirer">Supprimer</button>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.querySelectorAll(".form-generer").forEach(function (form) {
+    form.addEventListener("submit", function () {
+      var bouton = form.querySelector("button");
+      bouton.textContent = "Génération en cours…";
+      setTimeout(function () { bouton.disabled = true; }, 0);
+    });
+  });
+
+  // Supprime un exercice qui te semble faux
+  var liste = document.querySelector(".liste-exos");
+  liste.querySelectorAll(".btn-retirer").forEach(function (bouton) {
+    bouton.addEventListener("click", function () {
+      var ligne = bouton.closest("li");
+      var url = liste.dataset.supprimer.replace("/0/", "/" + ligne.dataset.id + "/");
+      fetch(url, { method: "POST" }).then(function () { ligne.remove(); });
+    });
+  });
+</script>
+{% endblock %}

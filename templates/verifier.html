@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block titre %}Vérifier {{ fiche.mot }} – Lexique grec{% endblock %}
+
+{% block classe_main %}moyen{% endblock %}
+
+{% block contenu %}
+<p><a class="retour" href="{{ url_for('fiche', mot=fiche.mot) }}">← Retour à la fiche</a></p>
+<h1 class="titre-point">Vérifier : <span class="grec">{{ fiche.mot }}</span> <span class="translit">({{ fiche.translitteration }})</span></h1>
+<p class="intro">Compare chaque ligne avec le Bailly ou le Chantraine, corrige ce qui est faux, puis valide.</p>
+
+{% if erreur %}<p class="erreur">{{ erreur }}</p>{% endif %}
+
+<form method="post" class="form-point bloc-formulaire">
+  <div class="rev-reglages">
+    <label class="rev-champ"><span>Nature</span>
+      <input type="text" name="nature" list="natures" value="{{ f.nature or '' }}" required maxlength="60">
+    </label>
+    <label class="rev-champ"><span>Genre</span>
+      <input type="text" name="genre" list="genres" value="{{ f.genre or '' }}" maxlength="30">
+    </label>
+    <label class="rev-champ"><span>Génitif</span>
+      <input type="text" name="genitif" class="grec" value="{{ f.genitif or '' }}" maxlength="60">
+    </label>
+  </div>
+
+  <label class="rev-champ"><span>Forme de base</span>
+    <input type="text" name="forme_de_base" class="grec" value="{{ f.forme_de_base or '' }}" maxlength="60">
+  </label>
+
+  <label class="rev-champ"><span>Traductions (séparées par des virgules)</span>
+    <input type="text" name="traductions" value="{{ f.traductions | join(', ') }}" required>
+  </label>
+
+  <label class="rev-champ"><span>Étymologie</span>
+    <textarea name="etymologie" rows="2" maxlength="500">{{ f.etymologie or '' }}</textarea>
+  </label>
+
+  <div class="rev-reglages">
+    <label class="rev-champ"><span>Champ lexical</span>
+      <select name="champ_lexical">
+        {% for c in champs %}<option value="{{ c }}" {{ 'selected' if c == f.champ_lexical }}>{{ c | capitalize }}</option>{% endfor %}
+        {% if f.champ_lexical and f.champ_lexical not in champs %}<option value="{{ f.champ_lexical }}" selected>{{ f.champ_lexical | capitalize }}</option>{% endif %}
+      </select>
+    </label>
+    <label class="rev-champ" style="flex: 2;"><span>Dérivés français (séparés par des virgules)</span>
+      <input type="text" name="derives_francais" value="{{ f.derives_francais | join(', ') }}">
+    </label>
+  </div>
+
+  <datalist id="natures">{% for n in natures %}<option value="{{ n }}">{% endfor %}</datalist>
+  <datalist id="genres"><option value="masculin"><option value="féminin"><option value="neutre"></datalist>
+
+  <label class="rev-champ"><span>Ma source et mes remarques (facultatif)</span>
+    <textarea name="note" rows="3" maxlength="1000" placeholder="Ex. : Bailly : « parole, discours, raison ». Étymologie corrigée d'après le Chantraine.">{{ f.note_verif or '' }}</textarea>
+  </label>
+
+  <label class="case-verif">
+    <input type="checkbox" name="verifie" value="oui" {{ 'checked' if request.method == 'GET' or f.verifie or request.form.get('verifie') }}>
+    J'ai comparé cette fiche avec le Bailly ou le Chantraine : la marquer comme vérifiée
+  </label>
+
+  <div class="fin-actions" style="justify-content: flex-start;">
+    <button class="btn-principal" type="submit">Enregistrer</button>
+    <a class="btn-secondaire lien" href="{{ url_for('fiche', mot=fiche.mot) }}">Annuler</a>
+  </div>
+</form>
+{% endblock %}
